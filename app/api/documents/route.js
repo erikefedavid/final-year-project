@@ -2,8 +2,39 @@ import connectDB from "@/lib/db";
 import Document from "@/models/Document";
 import { verifyToken } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { preprocessImage } from "@/lib/image-processor";
+import { summarizeText } from "@/lib/ai";
+import { extractTextFromImage } from "@/lib/ocr";
+import { extractTextFromPDF } from "@/lib/pdf-handler";
 import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
 import { NextResponse } from "next/server";
+
+async function processDocument(buffer, fileType) {
+  if (fileType === "application/pdf") {
+    const result = await extractTextFromPDF(buffer);
+    return {
+      text: result.text,
+      confidence: 100,
+    };
+  }
+
+  if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    const { extractTextFromDocx } = await import("@/lib/docx-handler");
+    const result = await extractTextFromDocx(buffer);
+    return {
+      text: result.text,
+      confidence: 100,
+    };
+  }
+
+  const processedBuffer = await preprocessImage(buffer);
+
+  const result = await extractTextFromImage(processedBuffer);
+  return {
+    text: result.text,
+    confidence: result.confidence,
+  };
+}
 
 export async function POST(request) {
   try {
@@ -49,6 +80,8 @@ export async function POST(request) {
       );
     }
 
+    const startTime = Date.now();
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
@@ -56,7 +89,21 @@ export async function POST(request) {
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${cleanName}`;
 
-    const cloudinaryResult = await uploadToCloudinary(buffer, fileName);
+    const [cloudinaryResult, ocrResult] = await Promise.all([
+      uploadToCloudinary(buffer, fileName),
+      processDocument(buffer, file.type),
+    ]);
+
+    let summary = "";
+
+    try {
+      summary = await summarizeText(ocrResult.text);
+    } catch (aiError) {
+      console.error("AI summarization failed:", aiError);
+      summary = "Summary generation failed. Please try again later.";
+    }
+
+    const processingTime = Date.now() - startTime;
 
     await connectDB();
 
@@ -67,7 +114,10 @@ export async function POST(request) {
       fileSize: file.size,
       imageUrl: cloudinaryResult.secure_url,
       cloudinaryId: cloudinaryResult.public_id,
-      status: "processing",
+      extractedText: ocrResult.text,
+      summary: summary,
+      status: "completed",
+      processingTime: processingTime,
     });
 
     return NextResponse.json(
@@ -78,6 +128,7 @@ export async function POST(request) {
             _id: document._id,
             originalName: document.originalName,
             status: document.status,
+            processingTime: document.processingTime,
           },
         },
       },
@@ -86,7 +137,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to upload document" },
+      { success: false, error: "Failed to process document" },
       { status: 500 }
     );
   }

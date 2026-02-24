@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  serverExternalPackages: ["tesseract.js", "sharp", "unpdf", "mammoth"],
 };
 
 export default nextConfig;
