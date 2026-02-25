@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, FileText, AlertCircle, Loader2 } from "lucide-react";
 import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function UploadForm() {
   const [file, setFile] = useState(null);
@@ -103,16 +104,20 @@ export function UploadForm() {
       });
 
       const data = await response.json();
-
+      
       if (data.success) {
-        router.push(`/document/${data.data.document._id}`);
+        toast.success("Document processed successfully!");
+        const docId = data.data.document._id;
+        setTimeout(() => {
+          router.push(`/document/${docId}`);
+        }, 500);
       } else {
+        toast.error(data.error || "Failed to process document.");
         setError(data.error || "Failed to process document.");
       }
     } catch (err) {
+      toast.error("Something went wrong. Please try again.");
       setError("Something went wrong. Please try again.");
-    } finally {
-      setIsProcessing(false);
     }
   };
 

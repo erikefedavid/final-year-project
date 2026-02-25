@@ -3,16 +3,13 @@
 import { useAuth } from "@/context/auth-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import  Loader  from "@/components/shared/loading-spinner";
 
 export default function DashboardLayout({ children }) {
   const { loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <Loader text="Loading your dashboard..." />;
   }
 
   return (

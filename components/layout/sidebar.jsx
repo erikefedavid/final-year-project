@@ -1,6 +1,8 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -30,7 +32,12 @@ export function Sidebar() {
   const { logout } = useAuth();
 
   return (
-    <div className="flex flex-col h-full w-60 border-r bg-card">
+    <motion.div
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col h-full w-60 border-r bg-card"
+    >
       <div className="p-6">
         <Link href="/dashboard">
           <h1 className="text-xl font-bold">DocDigitize</h1>
@@ -39,13 +46,15 @@ export function Sidebar() {
 
       <Separator />
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
 
           return (
             <Link key={item.href} href={item.href}>
-              <div
+              <motion.div
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   isActive
@@ -55,7 +64,7 @@ export function Sidebar() {
               >
                 <item.icon className="h-4 w-4" />
                 {item.title}
-              </div>
+              </motion.div>
             </Link>
           );
         })}
@@ -64,15 +73,17 @@ export function Sidebar() {
       <Separator />
 
       <div className="p-4">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground"
-          onClick={logout}
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
+        <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground"
+            onClick={logout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

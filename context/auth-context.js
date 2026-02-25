@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 const AuthContext = createContext(null);
 
@@ -58,7 +59,10 @@ export function AuthProvider({ children }) {
 
     if (data.success) {
       setUser(data.data.user);
+      toast.success(`Welcome back, ${data.data.user.name}!`);
       router.push("/dashboard");
+    } else {
+      toast.error(data.error);
     }
 
     return data;
@@ -75,7 +79,10 @@ export function AuthProvider({ children }) {
 
     if (data.success) {
       setUser(data.data.user);
+      toast.success("Account created successfully!");
       router.push("/dashboard");
+    } else {
+      toast.error(data.error);
     }
 
     return data;
@@ -84,6 +91,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
+    toast.success("Logged out successfully");
     router.push("/login");
   };
 

@@ -1,9 +1,7 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/context/theme-provider";
-
-const inter = Inter({ subsets: ["latin"] });
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
   title: "DocDigitize",
@@ -13,10 +11,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <ThemeProvider>
           <AuthProvider>
             {children}
+            <Toaster position="top-right" richColors />
           </AuthProvider>
         </ThemeProvider>
       </body>
