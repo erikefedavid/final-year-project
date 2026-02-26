@@ -3,13 +3,15 @@ import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { createToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { sanitizeInput } from "@/lib/sanitize";
 
 export async function POST(request) {
   try {
     await connectDB();
 
     const body = await request.json();
-    const { name, email, password } = body;
+    const name = sanitizeInput(body.name);
+    const email = sanitizeInput(body.email);
     
     if (!name || !email || !password) {
       return NextResponse.json(

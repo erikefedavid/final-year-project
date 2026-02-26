@@ -36,6 +36,10 @@ const documentSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    summaryType: {
+      type: String,
+      default: "detailed",
+    },
     status: {
       type: String,
       enum: ["processing", "completed", "failed"],

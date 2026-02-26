@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { FlashcardViewer } from "@/components/documents/flashcard-viewer";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +37,13 @@ import {
   FileText,
   Clock,
   Check,
+  Send,
+  Loader2,
+  MessageCircle,
+  RefreshCw,
 } from "lucide-react";
+import { toast } from "sonner";
+import { SUMMARY_TYPES } from "@/lib/constants";
 import Link from "next/link";
 
 export default function DocumentViewPage() {
@@ -44,7 +53,13 @@ export default function DocumentViewPage() {
   const [copiedText, setCopiedText] = useState(false);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedType, setSelectedType] = useState("detailed");
+  const [isResummarizing, setIsResummarizing] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatLoading, setIsChatLoading] = useState(false);
 
+  const chatEndRef = useRef(null);
   const params = useParams();
   const router = useRouter();
 
@@ -52,23 +67,22 @@ export default function DocumentViewPage() {
     fetchDocument();
   }, []);
 
-   const fetchDocument = async () => {
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  const fetchDocument = async () => {
     try {
-      const id = params.id;
-      console.log("Fetching document with ID:", id);
-
-      const response = await fetch(`/api/documents/${id}`);
+      const response = await fetch(`/api/documents/${params.id}`);
       const data = await response.json();
-
-      console.log("API response:", data);
 
       if (data.success) {
         setDocument(data.data.document);
+        setSelectedType(data.data.document.summaryType || "detailed");
       } else {
         setError(data.error || "Document not found");
       }
     } catch (err) {
-      console.error("Fetch error:", err);
       setError("Failed to load document");
     } finally {
       setLoading(false);
@@ -89,7 +103,7 @@ export default function DocumentViewPage() {
   };
 
   const handleDownload = () => {
-    const content = `Document: ${document.originalName}\nDate: ${new Date(document.createdAt).toLocaleDateString()}\n\n--- EXTRACTED TEXT ---\n\n${document.extractedText}\n\n--- AI SUMMARY ---\n\n${document.summary}`;
+    const content = `Document: ${document.originalName}\nDate: ${new Date(document.createdAt).toLocaleDateString()}\nSummary Type: ${SUMMARY_TYPES[document.summaryType]?.label || "Detailed"}\n\n--- EXTRACTED TEXT ---\n\n${document.extractedText}\n\n--- AI SUMMARY ---\n\n${document.summary}`;
 
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -101,7 +115,7 @@ export default function DocumentViewPage() {
     toast.success("Summary downloaded!");
   };
 
-    const handleDelete = async () => {
+  const handleDelete = async () => {
     setIsDeleting(true);
 
     try {
@@ -116,13 +130,81 @@ export default function DocumentViewPage() {
         router.push("/documents");
       } else {
         toast.error(data.error);
-        setError(data.error);
       }
     } catch (err) {
       toast.error("Failed to delete document");
-      setError("Failed to delete document");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleResummarize = async (type) => {
+    setSelectedType(type);
+    setIsResummarizing(true);
+
+    try {
+      const response = await fetch(`/api/documents/${params.id}/resummarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ summaryType: type }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setDocument((prev) => ({
+          ...prev,
+          summary: data.data.summary,
+          summaryType: data.data.summaryType,
+        }));
+        toast.success("Summary regenerated!");
+      } else {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      toast.error("Failed to regenerate summary");
+    } finally {
+      setIsResummarizing(false);
+    }
+  };
+
+  const handleChat = async (e) => {
+    e.preventDefault();
+
+    if (!chatInput.trim()) return;
+
+    const question = chatInput.trim();
+    setChatInput("");
+    setChatMessages((prev) => [...prev, { role: "user", content: question }]);
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch(`/api/documents/${params.id}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.data.answer },
+        ]);
+      } else {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Sorry, I couldn't answer that question." },
+        ]);
+      }
+    } catch (err) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Something went wrong. Please try again." },
+      ]);
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
@@ -171,7 +253,11 @@ export default function DocumentViewPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6"
+    >
       <div className="flex items-center gap-2">
         <Link href="/documents">
           <Button variant="ghost" size="icon">
@@ -222,7 +308,7 @@ export default function DocumentViewPage() {
 
         <Button variant="outline" size="sm" onClick={handleDownload}>
           <Download className="h-4 w-4 mr-2" />
-          Download Summary
+          Download
         </Button>
 
         <AlertDialog>
@@ -286,35 +372,145 @@ export default function DocumentViewPage() {
         </Card>
 
         <Card className="flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">AI Summary</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCopy(document.summary, "summary")}
-            >
-              {copiedSummary ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copy
-                </>
-              )}
-            </Button>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">AI Summary</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopy(document.summary, "summary")}
+              >
+                {copiedSummary ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div className="flex gap-1.5 flex-wrap pt-2">
+              {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
+                <Button
+                  key={key}
+                  variant={selectedType === key ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-7"
+                  onClick={() => handleResummarize(key)}
+                  disabled={isResummarizing}
+                >
+                  {isResummarizing && selectedType === key ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : null}
+                  {value.label}
+                </Button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
             <div className="h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {document.summary || "No summary available."}
-              </p>
+              {isResummarizing ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Regenerating summary...
+                  </p>
+                </div>
+              ) : (
+                <div className="text-sm">
+                  {document.summary ? (
+                    <MarkdownRenderer content={document.summary} />
+                  ) : (
+                    <p className="text-muted-foreground">No summary available.</p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            Ask About This Document
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Ask questions and get answers based only on this document.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 overflow-y-auto rounded-md bg-muted/50 p-4 mb-4 space-y-4">
+            {chatMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Ask a question about your document
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Example: &quot;What are the main topics covered?&quot;
+                </p>
+              </div>
+            ) : (
+              chatMessages.map((msg, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <MarkdownRenderer content={msg.content} />
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                </motion.div>
+              ))
+            )}
+
+            {isChatLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+              >
+                <div className="bg-muted rounded-lg px-4 py-2 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              </motion.div>
+            )}
+
+            <div ref={chatEndRef} />
+          </div>
+
+          <form onSubmit={handleChat} className="flex gap-2">
+            <Input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask a question about this document..."
+              disabled={isChatLoading}
+            />
+            <Button type="submit" size="icon" disabled={isChatLoading || !chatInput.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <FlashcardViewer documentId={params.id} />
+    </motion.div>
   );
 }

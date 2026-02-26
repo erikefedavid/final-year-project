@@ -5,6 +5,7 @@ import { uploadToCloudinary } from "@/lib/cloudinary";
 import { preprocessImage } from "@/lib/image-processor";
 import { summarizeText } from "@/lib/ai";
 import { extractTextFromImage } from "@/lib/ocr";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { extractTextFromPDF } from "@/lib/pdf-handler";
 import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
 import { NextResponse } from "next/server";
@@ -53,6 +54,16 @@ export async function POST(request) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired token" },
         { status: 401 }
+      );
+    }
+
+        // Rate limiting - 5 uploads per minute
+    const { allowed } = checkRateLimit(decoded.userId, 5, 60000);
+
+    if (!allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many uploads. Please wait a minute." },
+        { status: 429 }
       );
     }
 
