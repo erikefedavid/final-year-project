@@ -1,6 +1,13 @@
+"use client";
+
+import { useEffect } from "react";
 import { UploadForm } from "@/components/forms/upload-form";
 
 export default function UploadPage() {
+  useEffect(() => {
+    window.document.title = "Upload | DocDigitize";
+  }, []);
+
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div>

@@ -28,9 +28,12 @@ export function FlashcardViewer({ documentId }) {
         setIsGenerated(true);
         setCurrentIndex(0);
         setIsFlipped(false);
+        toast.success("New flashcards generated!");
+      } else {
+        toast.error(data.error || "Failed to generate flashcards");
       }
     } catch (error) {
-      console.error("Failed to generate flashcards:", error);
+      toast.error("Failed to generate flashcards");
     } finally {
       setIsLoading(false);
     }

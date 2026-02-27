@@ -2,15 +2,19 @@
 
 import styled from 'styled-components';
 
-const Loader = ({text="Loading..."}) => {
+const Loader = ({ text }) => {
   return (
     <StyledWrapper>
-      <div className="loaderRectangle flex justify-center items-center h-screen">
-        <div />
-        <div />
-        <div />
-        <div />
-        <div />
+      <div className="loaderContainer">
+        <div className="loaderRectangle">
+          <div />
+          <div />
+          <div />
+          <div />
+          <div />
+        </div>
+
+        {text && <p className="loaderText">{text}</p>}
       </div>
     </StyledWrapper>
   );

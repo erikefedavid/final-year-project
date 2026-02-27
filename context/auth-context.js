@@ -21,6 +21,9 @@ export function AuthProvider({ children }) {
         setUser(data.data.user);
       } else {
         setUser(null);
+        if (data.error === "Invalid or expired token") {
+          await fetch("/api/auth/logout", { method: "POST" });
+        }
       }
     } catch (error) {
       setUser(null);

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Upload, Eye, Trash2, Plus } from "lucide-react";
+import { FileText, Upload, Eye, Trash2, Plus, Clock } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState([]);
@@ -37,6 +38,7 @@ export default function DocumentsPage() {
   const router = useRouter();
 
   useEffect(() => {
+    window.document.title = "My Documents | DocDigitize";
     fetchDocuments();
   }, []);
 
@@ -55,7 +57,7 @@ export default function DocumentsPage() {
     }
   };
 
-   const handleDelete = async (id) => {
+  const handleDelete = async (id) => {
     setDeletingId(id);
 
     try {
@@ -108,269 +110,207 @@ export default function DocumentsPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 w-full max-w-6xl mx-auto px-2 sm:px-0">
-
-  {/* Header */}
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-    <div className="min-w-0">
-      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
-        My Documents
-      </h2>
-
-      <p className="text-xs sm:text-sm text-muted-foreground">
-        {documents.length} {documents.length === 1 ? "document" : "documents"}
-      </p>
-    </div>
-
-    <Link href="/upload" className="w-full sm:w-auto">
-      <Button className="w-full sm:w-auto">
-        <Plus className="h-4 w-4 mr-2 shrink-0" />
-        Upload
-      </Button>
-    </Link>
-
-  </div>
-
-
-  {/* Empty state */}
-  {documents.length === 0 ? (
-
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-10 sm:py-12 text-center px-4">
-
-        <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
-
-        <p className="text-base sm:text-lg font-medium">
-          No documents yet
-        </p>
-
-        <p className="text-xs sm:text-sm text-muted-foreground mb-4">
-          Upload your first document to get started
-        </p>
-
-        <Link href="/upload" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Document
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">My Documents</h2>
+          <p className="text-sm text-muted-foreground">
+            {documents.length} {documents.length === 1 ? "document" : "documents"}
+          </p>
+        </div>
+        <Link href="/upload">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Upload</span>
           </Button>
         </Link>
-
-      </CardContent>
-    </Card>
-
-  ) : (
-
-    <>
-
-      {/* Mobile layout (cards) */}
-      <div className="block md:hidden space-y-3">
-
-        {documents.map((doc) => (
-
-          <Card key={doc._id}>
-            <CardContent className="p-4 space-y-3">
-
-              <div className="flex justify-between items-start gap-3">
-
-                <div className="min-w-0">
-
-                  <p className="font-medium text-sm truncate max-w-[220px]">
-                    {doc.originalName}
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(doc.createdAt)}
-                  </p>
-
-                </div>
-
-                <Badge
-                  variant={
-                    doc.status === "completed"
-                      ? "default"
-                      : "destructive"
-                  }
-                  className="text-xs"
-                >
-                  {doc.status}
-                </Badge>
-
-              </div>
-
-
-              <div className="flex justify-between items-center">
-
-                <Badge variant="secondary" className="text-xs">
-                  {getFileTypeBadge(doc.fileType)}
-                </Badge>
-
-                <div className="flex gap-1">
-
-                  <Link href={`/document/${doc._id}`}>
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </AlertDialogTrigger>
-
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Delete Document
-                        </AlertDialogTitle>
-
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{doc.originalName}"?
-                        </AlertDialogDescription>
-
-                      </AlertDialogHeader>
-
-                      <AlertDialogFooter>
-
-                        <AlertDialogCancel>
-                          Cancel
-                        </AlertDialogCancel>
-
-                        <AlertDialogAction
-                          onClick={() => handleDelete(doc._id)}
-                          disabled={deletingId === doc._id}
-                        >
-                          {deletingId === doc._id
-                            ? "Deleting..."
-                            : "Delete"}
-                        </AlertDialogAction>
-
-                      </AlertDialogFooter>
-
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                </div>
-
-              </div>
-
-            </CardContent>
-          </Card>
-
-        ))}
-
       </div>
 
+      {documents.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-lg font-medium">No documents yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload your first document to get started
+            </p>
+            <Link href="/upload">
+              <Button>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Document
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="hidden md:block">
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {documents.map((doc) => (
+                      <TableRow key={doc._id}>
+                        <TableCell className="font-medium max-w-[200px] truncate">
+                          {doc.originalName}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {getFileTypeBadge(doc.fileType)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatFileSize(doc.fileSize)}</TableCell>
+                        <TableCell>{formatDate(doc.createdAt)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={doc.status === "completed" ? "default" : "destructive"}
+                          >
+                            {doc.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link href={`/document/${doc._id}`}>
+                              <Button variant="ghost" size="icon">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete &quot;{doc.originalName}&quot;?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(doc._id)}
+                                    disabled={deletingId === doc._id}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    {deletingId === doc._id ? "Deleting..." : "Delete"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
 
-
-      {/* Desktop table */}
-      <Card className="hidden md:block">
-
-        <CardContent className="p-0 overflow-x-auto">
-
-          <Table>
-
-            <TableHeader>
-
-              <TableRow>
-
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">
-                  Actions
-                </TableHead>
-
-              </TableRow>
-
-            </TableHeader>
-
-            <TableBody>
-
-              {documents.map((doc) => (
-
-                <TableRow key={doc._id}>
-
-                  <TableCell className="font-medium max-w-[300px] truncate">
-                    {doc.originalName}
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {getFileTypeBadge(doc.fileType)}
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell>
-                    {formatFileSize(doc.fileSize)}
-                  </TableCell>
-
-                  <TableCell>
-                    {formatDate(doc.createdAt)}
-                  </TableCell>
-
-                  <TableCell>
-                    <Badge
-                      variant={
-                        doc.status === "completed"
-                          ? "default"
-                          : "destructive"
-                      }
-                    >
-                      {doc.status}
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell className="text-right">
-
-                    <div className="flex justify-end gap-1">
-
-                      <Link href={`/document/${doc._id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
+          <div className="md:hidden space-y-3">
+            {documents.map((doc) => (
+              <motion.div
+                key={doc._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/document/${doc._id}`}
+                        className="flex-1 min-w-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-8 w-8 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {doc.originalName}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="secondary" className="text-xs">
+                                {getFileTypeBadge(doc.fileType)}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {formatFileSize(doc.fileSize)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(doc.createdAt)}
+                              </span>
+                              <Badge
+                                variant={doc.status === "completed" ? "default" : "destructive"}
+                                className="text-xs"
+                              >
+                                {doc.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
                       </Link>
 
-                      {/* delete dialog same as above */}
-
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="shrink-0">
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete &quot;{doc.originalName}&quot;?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(doc._id)}
+                              disabled={deletingId === doc._id}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {deletingId === doc._id ? "Deleting..." : "Delete"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
-
-                  </TableCell>
-
-                </TableRow>
-
-              ))}
-
-            </TableBody>
-
-          </Table>
-
-        </CardContent>
-
-      </Card>
-
-    </>
-
-  )}
-
-</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </>
+      )}
+    </motion.div>
   );
 }

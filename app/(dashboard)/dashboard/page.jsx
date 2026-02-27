@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.document.title = "Dashboard | DocDigitize";
     fetchDocuments();
   }, []);
 

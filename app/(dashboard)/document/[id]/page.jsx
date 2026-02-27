@@ -8,6 +8,8 @@ import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FlashcardViewer } from "@/components/documents/flashcard-viewer";
+import { fetchWithTimeout } from "@/lib/fetch-wrapper";
+import { SafeImage } from "@/components/shared/safe-image";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +44,12 @@ import {
   MessageCircle,
   RefreshCw,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { SUMMARY_TYPES } from "@/lib/constants";
 import Link from "next/link";
@@ -62,6 +70,12 @@ export default function DocumentViewPage() {
   const chatEndRef = useRef(null);
   const params = useParams();
   const router = useRouter();
+
+    useEffect(() => {
+    if (document) {
+      window.document.title = `${document.originalName} | DocDigitize`;
+    }
+  }, [document]);
 
   useEffect(() => {
     fetchDocument();
@@ -102,7 +116,15 @@ export default function DocumentViewPage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = (format) => {
+    if (format === "txt") {
+      downloadAsTxt();
+    } else {
+      downloadAsDocx();
+    }
+  };
+
+  const downloadAsTxt = () => {
     const content = `Document: ${document.originalName}\nDate: ${new Date(document.createdAt).toLocaleDateString()}\nSummary Type: ${SUMMARY_TYPES[document.summaryType]?.label || "Detailed"}\n\n--- EXTRACTED TEXT ---\n\n${document.extractedText}\n\n--- AI SUMMARY ---\n\n${document.summary}`;
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -112,7 +134,65 @@ export default function DocumentViewPage() {
     a.download = `${document.originalName}_summary.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Summary downloaded!");
+    toast.success("Downloading as TXT!");
+  };
+
+  const downloadAsDocx = async () => {
+    try {
+      const { Document: DocxDocument, Packer, Paragraph, TextRun, HeadingLevel } = await import("docx");
+      const { saveAs } = await import("file-saver");
+
+      const doc = new DocxDocument({
+        sections: [
+          {
+            children: [
+              new Paragraph({
+                text: document.originalName,
+                heading: HeadingLevel.HEADING_1,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `Date: ${new Date(document.createdAt).toLocaleDateString()}`,
+                    color: "888888",
+                  }),
+                ],
+              }),
+              new Paragraph({ text: "" }),
+              new Paragraph({
+                text: "Extracted Text",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              ...document.extractedText.split("\n").map(
+                (line) =>
+                  new Paragraph({
+                    children: [new TextRun({ text: line })],
+                  })
+              ),
+              new Paragraph({ text: "" }),
+              new Paragraph({
+                text: "AI Summary",
+                heading: HeadingLevel.HEADING_2,
+              }),
+              ...document.summary.split("\n").map(
+                (line) =>
+                  new Paragraph({
+                    children: [new TextRun({ text: line })],
+                  })
+              ),
+            ],
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${document.originalName}_summary.docx`);
+      toast.success("Downloading as DOCX!");
+    } catch (error) {
+      console.error("DOCX download failed:", error);
+      toast.error("Failed to download as DOCX. Downloading as TXT instead.");
+      downloadAsTxt();
+    }
   };
 
   const handleDelete = async () => {
@@ -143,7 +223,7 @@ export default function DocumentViewPage() {
     setIsResummarizing(true);
 
     try {
-      const response = await fetch(`/api/documents/${params.id}/resummarize`, {
+      const response = await fetchWithTimeout(`/api/documents/${params.id}/resummarize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ summaryType: type }),
@@ -179,7 +259,7 @@ export default function DocumentViewPage() {
     setIsChatLoading(true);
 
     try {
-      const response = await fetch(`/api/documents/${params.id}/chat`, {
+      const response = await fetchWithTimeout(`/api/documents/${params.id}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
@@ -297,7 +377,7 @@ export default function DocumentViewPage() {
               <DialogTitle>{document.originalName}</DialogTitle>
             </DialogHeader>
             <div className="overflow-auto">
-              <img
+              <SafeImage
                 src={document.imageUrl}
                 alt={document.originalName}
                 className="w-full rounded"
@@ -306,10 +386,24 @@ export default function DocumentViewPage() {
           </DialogContent>
         </Dialog>
 
-        <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleDownload("txt")}>
+              <FileText className="h-4 w-4 mr-2" />
+              Download as .TXT
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDownload("docx")}>
+              <FileText className="h-4 w-4 mr-2" />
+              Download as .DOCX
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -363,7 +457,7 @@ export default function DocumentViewPage() {
             </Button>
           </CardHeader>
           <CardContent className="flex-1">
-            <div className="h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+            <div className="h-64 sm:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
                 {document.extractedText || "No text extracted."}
               </p>
@@ -413,7 +507,7 @@ export default function DocumentViewPage() {
             </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <div className="h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+            <div className="h-64 sm:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
               {isResummarizing ? (
                 <div className="flex flex-col items-center justify-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
@@ -446,7 +540,7 @@ export default function DocumentViewPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-64 overflow-y-auto rounded-md bg-muted/50 p-4 mb-4 space-y-4">
+          <div className="h-48 sm:h-64 overflow-y-auto rounded-md bg-muted/50 p-4 mb-4 space-y-4">
             {chatMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
