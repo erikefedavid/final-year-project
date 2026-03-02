@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import styled from 'styled-components';
+import styled from "styled-components";
+import { useTheme } from "next-themes";
 
 const Loader = ({ text }) => {
+  const { theme } = useTheme();
+
+  const barColor =
+    theme === "dark" ? "#ffffff" : "#183153";
+
   return (
-    <StyledWrapper>
+    <StyledWrapper $color={barColor}>
       <div className="loaderContainer">
         <div className="loaderRectangle">
           <div />
@@ -18,118 +24,56 @@ const Loader = ({ text }) => {
       </div>
     </StyledWrapper>
   );
-}
+};
 
 const StyledWrapper = styled.div`
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  z-index: 9999;
+
+  .loaderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .loaderText {
+    font-size: 15px;
+    color: ${({ $color }) => $color};
+    font-weight: 500;
+  }
+
   .loaderRectangle {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   gap: 0 3px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4px;
   }
 
   .loaderRectangle div {
-   width: 10px;
-   height: 16px;
-   animation: .9s ease-in-out infinite;
-   background: #183153;
-   box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+    width: 10px;
+    height: 16px;
+    animation: 0.9s ease-in-out infinite;
+    background: ${({ $color }) => $color};
+    box-shadow: 0 0 15px ${({ $color }) => $color}55;
   }
 
-  .loaderRectangle div:nth-child(1) {
-   animation-name: rectangleOneAnim;
-   animation-delay: 1s;
-  }
+  .loaderRectangle div:nth-child(1) { animation-name: r1; }
+  .loaderRectangle div:nth-child(2) { animation-name: r2; }
+  .loaderRectangle div:nth-child(3) { animation-name: r3; }
+  .loaderRectangle div:nth-child(4) { animation-name: r2; }
+  .loaderRectangle div:nth-child(5) { animation-name: r1; }
 
-  @keyframes rectangleOneAnim {
-   0% {
-    height: 15px;
-   }
-
-   40% {
-    height: 30px;
-   }
-
-   100% {
-    height: 15px;
-   }
-  }
-
-  .loaderRectangle div:nth-child(2) {
-   animation-name: rectangleTwoAnim;
-   animation-delay: 1.1s;
-  }
-
-  @keyframes rectangleTwoAnim {
-   0% {
-    height: 15px;
-   }
-
-   40% {
-    height: 40px;
-   }
-
-   100% {
-    height: 15px;
-   }
-  }
-
-  .loaderRectangle div:nth-child(3) {
-   animation-name: rectangleThreeAnim;
-   animation-delay: 1.2s;
-  }
-
-  @keyframes rectangleThreeAnim {
-   0% {
-    height: 15px;
-   }
-
-   40% {
-    height: 50px;
-   }
-
-   100% {
-    height: 15px;
-   }
-  }
-
-  .loaderRectangle div:nth-child(4) {
-   animation-name: rectangleFourAnim;
-   animation-delay: 1.3s;
-  }
-
-  @keyframes rectangleFourAnim {
-   0% {
-    height: 15px;
-   }
-
-   40% {
-    height: 40px;
-   }
-
-   100% {
-    height: 15px;
-   }
-  }
-
-  .loaderRectangle div:nth-child(5) {
-   animation-name: rectangleFiveAnim;
-   animation-delay: 1.4s;
-  }
-
-  @keyframes rectangleFiveAnim {
-   0% {
-    height: 15px;
-   }
-
-   40% {
-    height: 30px;
-   }
-
-   100% {
-    height: 15px;
-   }
-  }`;
+  @keyframes r1 { 0%,100%{height:16px;} 50%{height:35px;} }
+  @keyframes r2 { 0%,100%{height:16px;} 50%{height:45px;} }
+  @keyframes r3 { 0%,100%{height:16px;} 50%{height:55px;} }
+`;
 
 export default Loader;
-

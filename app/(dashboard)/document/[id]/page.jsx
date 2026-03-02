@@ -380,7 +380,7 @@ export default function DocumentViewPage() {
               <SafeImage
                 src={document.imageUrl}
                 alt={document.originalName}
-                className="w-full rounded"
+                className="max-w-full max-h-[70vh] object-contain mx-auto rounded"
               />
             </div>
           </DialogContent>
@@ -604,7 +604,17 @@ export default function DocumentViewPage() {
           </form>
         </CardContent>
       </Card>
-      <FlashcardViewer documentId={params.id} />
+      {document.extractedText ? (
+        <FlashcardViewer documentId={params.id} />
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">
+              Flashcards are unavailable because no text was extracted.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </motion.div>
   );
 }

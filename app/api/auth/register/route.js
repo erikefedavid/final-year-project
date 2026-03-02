@@ -2,17 +2,19 @@ import connectDB from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { createToken } from "@/lib/auth";
-import { NextResponse } from "next/server";
 import { sanitizeInput } from "@/lib/sanitize";
+import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
     await connectDB();
 
     const body = await request.json();
+
     const name = sanitizeInput(body.name);
     const email = sanitizeInput(body.email);
-    
+    const password = body.password; // DO NOT sanitize password
+
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: "All fields are required" },
@@ -70,8 +72,9 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: "Failed to create account" },
       { status: 500 }
     );
   }

@@ -35,21 +35,21 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     fetchUser();
   }, []);
+  
+    useEffect(() => {
+      if (loading) return;
 
-  useEffect(() => {
-    if (loading) return;
+      const publicPaths = ["/", "/login", "/register"];
+      const isPublicPath = publicPaths.includes(pathname);
 
-    const publicPaths = ["/", "/login", "/register"];
-    const isPublicPath = publicPaths.includes(pathname);
+      if (!user && !isPublicPath) {
+        router.push("/");
+      }
 
-    if (!user && !isPublicPath) {
-      router.push("/login");
-    }
-
-    if (user && (pathname === "/login" || pathname === "/register")) {
-      router.push("/dashboard");
-    }
-  }, [user, loading, pathname, router]);
+      if (user && (pathname === "/login" || pathname === "/register")) {
+        router.push("/dashboard");
+      }
+    }, [user, loading, pathname, router]);
 
   const login = async (email, password) => {
     const response = await fetch("/api/auth/login", {
@@ -95,7 +95,7 @@ export function AuthProvider({ children }) {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     toast.success("Logged out successfully");
-    router.push("/login");
+    router.push("/");
   };
 
   return (

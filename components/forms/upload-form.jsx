@@ -111,16 +111,20 @@ export function UploadForm() {
 
       const data = await response.json();
 
-      if (data.success) {
-        toast.success("Document processed successfully!");
-        const docId = data.data.document._id;
-        setTimeout(() => {
-          router.push(`/document/${docId}`);
-        }, 500);
-      } else {
-        toast.error(data.error || "Failed to process document.");
-        setError(data.error || "Failed to process document.");
-      }
+        if (data.success) {
+          toast.success("✅ Document processed successfully!");
+          const docId = data.data.document._id;
+          setTimeout(() => {
+            router.push(`/document/${docId}`);
+          }, 500);
+        } else {
+          if (data.error === "This document has already been uploaded.") {
+            toast.error("📄 This document already exists.");
+          } else {
+            toast.error(data.error || "Failed to process document.");
+          }
+          setError(data.error || "Failed to process document.");
+        }
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
       setError("Something went wrong. Please try again.");

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, RotateCcw, Loader2, GraduationCap } from "lucide-react";
+import { toast } from "sonner";
 
 export function FlashcardViewer({ documentId }) {
   const [flashcards, setFlashcards] = useState([]);
@@ -139,7 +140,7 @@ export function FlashcardViewer({ documentId }) {
             variant="ghost"
             size="sm"
             onClick={generateFlashcards}
-            disabled={isLoading}
+            disabled={isLoading || !document?.extractedText}
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

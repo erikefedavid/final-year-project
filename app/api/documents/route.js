@@ -118,6 +118,20 @@ export async function POST(request) {
 
     await connectDB();
 
+    // ✅ Prevent duplicate uploads (same file name + size + user)
+        const existingDocument = await Document.findOne({
+          userId: decoded.userId,
+          originalName: file.name,
+          fileSize: file.size,
+        });
+
+        if (existingDocument) {
+          return NextResponse.json(
+            { success: false, error: "This document has already been uploaded." },
+            { status: 400 }
+          );
+        }
+
     const document = await Document.create({
       userId: decoded.userId,
       originalName: file.name,

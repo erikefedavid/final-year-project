@@ -1,13 +1,13 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import  Loader from "@/components/shared/loading-spinner";
+import Loader from "@/components/shared/loading-spinner";
 
 export default function AuthLayout({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <Loader/>;
+    return <Loader text="Loading..." />;
   }
 
   if (user) {
