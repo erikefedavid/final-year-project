@@ -333,30 +333,36 @@ export default function DocumentViewPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
-    >
-      <div className="flex items-center gap-2">
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="w-full px-4 sm:px-6 lg:px-8 overflow-x-hidden"
+  >
+    <div className="max-w-6xl mx-auto space-y-6">
+
+      {/* Header */}
+      <div className="flex items-start gap-3">
         <Link href="/documents">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{document.originalName}</h2>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="text-sm text-muted-foreground">
-              {formatDate(document.createdAt)}
-            </span>
+
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl font-bold break-words">
+            {document.originalName}
+          </h2>
+
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
+            <span>{formatDate(document.createdAt)}</span>
+
             <Badge variant="secondary">
               {document.fileType.split("/").pop().toUpperCase()}
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              {formatFileSize(document.fileSize)}
-            </span>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+
+            <span>{formatFileSize(document.fileSize)}</span>
+
+            <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {formatProcessingTime(document.processingTime)}
             </div>
@@ -364,7 +370,9 @@ export default function DocumentViewPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2">
+
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
@@ -372,20 +380,38 @@ export default function DocumentViewPage() {
               View Original
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[80vh]">
+
+          <DialogContent className="max-w-4xl max-h-[85vh]">
             <DialogHeader>
-              <DialogTitle>{document.originalName}</DialogTitle>
+              <DialogTitle className="break-words">
+                {document.originalName}
+              </DialogTitle>
             </DialogHeader>
+
             <div className="overflow-auto">
-              <SafeImage
-                src={document.imageUrl}
-                alt={document.originalName}
-                className="max-w-full max-h-[70vh] object-contain mx-auto rounded"
-              />
+              {document.fileType.startsWith("image/") ? (
+                <SafeImage
+                  src={document.imageUrl}
+                  alt={document.originalName}
+                  className="max-w-full max-h-[70vh] object-contain mx-auto rounded"
+                />
+              ) : document.fileType === "application/pdf" ? (
+                <iframe
+                  src={document.imageUrl}
+                  className="w-full h-[70vh] rounded"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[300px] bg-muted rounded">
+                  <p className="text-muted-foreground">
+                    Preview not available for this file type.
+                  </p>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
 
+        {/* Download */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
@@ -393,18 +419,18 @@ export default function DocumentViewPage() {
               Download
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => handleDownload("txt")}>
-              <FileText className="h-4 w-4 mr-2" />
               Download as .TXT
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleDownload("docx")}>
-              <FileText className="h-4 w-4 mr-2" />
               Download as .DOCX
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Delete */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm">
@@ -412,209 +438,125 @@ export default function DocumentViewPage() {
               Delete
             </Button>
           </AlertDialogTrigger>
+
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Document</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete &quot;{document.originalName}&quot;?
-                This action cannot be undone.
+                Are you sure you want to delete this document?
               </AlertDialogDescription>
             </AlertDialogHeader>
+
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
+              <AlertDialogAction onClick={handleDelete}>
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="flex flex-col">
+      {/* Text + Summary Grid */}
+      <div className="grid gap-4 lg:grid-cols-2">
+
+        {/* Extracted Text */}
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Extracted Text</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCopy(document.extractedText, "text")}
-            >
-              {copiedText ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copy
-                </>
-              )}
+            <CardTitle>Extracted Text</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => handleCopy(document.extractedText, "text")}>
+              <Copy className="h-4 w-4 mr-1" />
+              Copy
             </Button>
           </CardHeader>
-          <CardContent className="flex-1">
-            <div className="h-64 sm:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {document.extractedText || "No text extracted."}
+
+          <CardContent>
+            <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {document.extractedText}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
+        {/* Summary */}
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">AI Summary</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleCopy(document.summary, "summary")}
-              >
-                {copiedSummary ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
+            <CardTitle>AI Summary</CardTitle>
 
-            <div className="flex gap-1.5 flex-wrap pt-2">
+            <div className="flex flex-wrap gap-1 pt-2">
               {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
                 <Button
                   key={key}
                   variant={selectedType === key ? "default" : "outline"}
                   size="sm"
-                  className="text-xs h-7"
+                  className="text-xs"
                   onClick={() => handleResummarize(key)}
-                  disabled={isResummarizing}
                 >
-                  {isResummarizing && selectedType === key ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : null}
                   {value.label}
                 </Button>
               ))}
             </div>
           </CardHeader>
-          <CardContent className="flex-1">
-            <div className="h-64 sm:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
-              {isResummarizing ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Regenerating summary...
-                  </p>
-                </div>
-              ) : (
-                <div className="text-sm">
-                  {document.summary ? (
-                    <MarkdownRenderer content={document.summary} />
-                  ) : (
-                    <p className="text-muted-foreground">No summary available.</p>
-                  )}
-                </div>
-              )}
+
+          <CardContent>
+            <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+              <MarkdownRenderer content={document.summary} />
             </div>
           </CardContent>
         </Card>
+
       </div>
 
+      {/* Chat Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
             Ask About This Document
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Ask questions and get answers based only on this document.
-          </p>
         </CardHeader>
+
         <CardContent>
-          <div className="h-48 sm:h-64 overflow-y-auto rounded-md bg-muted/50 p-4 mb-4 space-y-4">
-            {chatMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Ask a question about your document
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Example: &quot;What are the main topics covered?&quot;
-                </p>
-              </div>
-            ) : (
-              chatMessages.map((msg, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    {msg.role === "assistant" ? (
-                      <MarkdownRenderer content={msg.content} />
-                    ) : (
-                      msg.content
-                    )}
-                  </div>
-                </motion.div>
-              ))
-            )}
-
-            {isChatLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
+          <div className="h-48 sm:h-64 overflow-y-auto bg-muted/50 rounded-md p-4 mb-4">
+            {chatMessages.map((msg, index) => (
+              <div
+                key={index}
+                className={`mb-3 ${
+                  msg.role === "user" ? "text-right" : "text-left"
+                }`}
               >
-                <div className="bg-muted rounded-lg px-4 py-2 text-sm">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="inline-block max-w-[85%] px-4 py-2 rounded-lg bg-muted text-sm break-words">
+                  {msg.role === "assistant" ? (
+                    <MarkdownRenderer content={msg.content} />
+                  ) : (
+                    msg.content
+                  )}
                 </div>
-              </motion.div>
-            )}
-
-            <div ref={chatEndRef} />
+              </div>
+            ))}
           </div>
 
           <form onSubmit={handleChat} className="flex gap-2">
             <Input
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask a question about this document..."
-              disabled={isChatLoading}
+              placeholder="Ask a question..."
             />
-            <Button type="submit" size="icon" disabled={isChatLoading || !chatInput.trim()}>
+            <Button type="submit">
               <Send className="h-4 w-4" />
             </Button>
           </form>
         </CardContent>
       </Card>
-      {document.extractedText ? (
+
+      {/* Flashcards */}
+      {document.extractedText && (
         <FlashcardViewer documentId={params.id} />
-      ) : (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              Flashcards are unavailable because no text was extracted.
-            </p>
-          </CardContent>
-        </Card>
       )}
-    </motion.div>
-  );
+
+    </div>
+  </motion.div>
+);
 }
