@@ -4,7 +4,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, RotateCcw, Loader2, GraduationCap } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Loader2,
+  GraduationCap,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export function FlashcardViewer({ documentId }) {
@@ -60,11 +66,11 @@ export function FlashcardViewer({ documentId }) {
 
   if (!isGenerated) {
     return (
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="py-8 text-center">
           <GraduationCap className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-semibold mb-2">Study Flashcards</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-4 px-2">
             Generate flashcards from this document to help you study.
           </p>
           <Button onClick={generateFlashcards} disabled={isLoading}>
@@ -88,18 +94,20 @@ export function FlashcardViewer({ documentId }) {
   const currentCard = flashcards[currentIndex];
 
   return (
-    <Card>
-      <CardContent className="py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Flashcards
+    <Card className="overflow-hidden">
+      <CardContent className="py-6 min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 min-w-0 gap-2">
+          <h3 className="font-semibold flex items-center gap-2 min-w-0">
+            <GraduationCap className="h-5 w-5 shrink-0" />
+            <span className="truncate">Flashcards</span>
           </h3>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground shrink-0">
             {currentIndex + 1} / {flashcards.length}
           </span>
         </div>
 
+        {/* Flashcard */}
         <div
           className="cursor-pointer mb-4"
           onClick={() => setIsFlipped(!isFlipped)}
@@ -111,7 +119,7 @@ export function FlashcardViewer({ documentId }) {
               animate={{ rotateY: 0, opacity: 1 }}
               exit={{ rotateY: -90, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className={`min-h-[200px] rounded-lg p-6 flex flex-col items-center justify-center text-center ${
+              className={`min-h-[200px] rounded-lg p-4 sm:p-6 flex flex-col items-center justify-center text-center overflow-hidden ${
                 isFlipped
                   ? "bg-primary/10 border-2 border-primary/20"
                   : "bg-muted border-2 border-muted"
@@ -120,7 +128,7 @@ export function FlashcardViewer({ documentId }) {
               <p className="text-xs text-muted-foreground mb-2">
                 {isFlipped ? "ANSWER" : "QUESTION"}
               </p>
-              <p className="text-lg font-medium">
+              <p className="text-base sm:text-lg font-medium break-words overflow-hidden w-full">
                 {isFlipped ? currentCard.back : currentCard.front}
               </p>
               <p className="text-xs text-muted-foreground mt-4">
@@ -130,17 +138,19 @@ export function FlashcardViewer({ documentId }) {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* Navigation */}
+        <div className="flex items-center justify-between gap-2">
           <Button variant="outline" size="sm" onClick={prevCard}>
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous
+            <ChevronLeft className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Previous</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
+            className="shrink-0"
             onClick={generateFlashcards}
-            disabled={isLoading || !document?.extractedText}
+            disabled={isLoading}
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -150,8 +160,8 @@ export function FlashcardViewer({ documentId }) {
           </Button>
 
           <Button variant="outline" size="sm" onClick={nextCard}>
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="h-4 w-4 sm:ml-1" />
           </Button>
         </div>
       </CardContent>

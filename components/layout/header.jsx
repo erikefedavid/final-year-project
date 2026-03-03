@@ -19,20 +19,24 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-10 h-16 border-b bg-card flex items-center justify-between px-4 md:px-6">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-10 h-16 border-b bg-card flex items-center justify-between px-4 md:px-6 min-w-0 overflow-hidden">
+      {/* Left side */}
+      <div className="flex items-center gap-2 shrink-0">
         <MobileNav />
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Right side */}
+      <div className="flex items-center gap-3 min-w-0">
         <ThemeToggle />
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+        
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="text-xs">
               {getInitials(user?.name)}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium hidden sm:inline-block">
+          
+          <span className="text-sm font-medium hidden sm:inline-block truncate max-w-[150px]">
             {user?.name}
           </span>
         </div>

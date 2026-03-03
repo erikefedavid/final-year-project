@@ -69,9 +69,9 @@ export default function DocumentsPage() {
 
   if (loading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="w-full min-w-0 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
         <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-8 w-48 max-w-full" />
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
         </div>
@@ -83,20 +83,20 @@ export default function DocumentsPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full px-4 sm:px-6 lg:px-8"
+      className="w-full min-w-0 px-4 sm:px-6 lg:px-8 overflow-x-hidden"
     >
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6 min-w-0">
 
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-2xl font-bold">My Documents</h2>
+        <div className="flex items-center justify-between flex-wrap gap-3 min-w-0">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-2xl font-bold break-words">My Documents</h2>
             <p className="text-sm text-muted-foreground">
               {documents.length} documents
             </p>
           </div>
 
-          <Link href="/upload">
+          <Link href="/upload" className="shrink-0">
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Upload
@@ -106,7 +106,7 @@ export default function DocumentsPage() {
 
         {/* Empty State */}
         {documents.length === 0 ? (
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="py-12 text-center">
               <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-muted-foreground">No documents yet</p>
@@ -115,9 +115,9 @@ export default function DocumentsPage() {
         ) : (
           <div className="space-y-4">
             {documents.map((doc) => (
-              <Card key={doc._id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
+              <Card key={doc._id} className="overflow-hidden">
+                <CardContent className="p-4 min-w-0">
+                  <div className="flex items-start justify-between gap-3 min-w-0">
 
                     <Link
                       href={`/document/${doc._id}`}
@@ -126,19 +126,22 @@ export default function DocumentsPage() {
                       <FileText className="h-6 w-6 text-primary shrink-0" />
 
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate break-words">
+                        <p className="font-medium truncate">
                           {doc.originalName}
                         </p>
 
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-                          <Clock className="h-3 w-3" />
-                          {formatDate(doc.createdAt)}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Clock className="h-3 w-3" />
+                            {formatDate(doc.createdAt)}
+                          </div>
                           <Badge
                             variant={
                               doc.status === "completed"
                                 ? "default"
                                 : "destructive"
                             }
+                            className="shrink-0"
                           >
                             {doc.status}
                           </Badge>
@@ -148,11 +151,11 @@ export default function DocumentsPage() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="shrink-0">
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
                         <AlertDialogHeader>
                           <AlertDialogTitle>
                             Delete Document

@@ -41,20 +41,20 @@ export function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button variant="ghost" size="icon" className="md:hidden shrink-0">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-60 p-0">
-        <div className="flex flex-col h-full">
-          <div className="p-6">
-            <h1 className="text-xl font-bold">DocDigitize</h1>
+      <SheetContent side="left" className="w-60 p-0 overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="p-6 min-w-0">
+            <h1 className="text-xl font-bold truncate">DocDigitize</h1>
           </div>
 
           <Separator />
 
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto min-w-0">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -66,14 +66,14 @@ export function MobileNav() {
                 >
                   <div
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors min-w-0",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {item.title}
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.title}</span>
                   </div>
                 </Link>
               );
@@ -82,14 +82,14 @@ export function MobileNav() {
 
           <Separator />
 
-          <div className="p-4">
+          <div className="p-4 min-w-0">
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 text-muted-foreground"
+              className="w-full justify-start gap-3 text-muted-foreground min-w-0"
               onClick={handleLogout}
             >
-              <LogOut className="h-4 w-4" />
-              Logout
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className="truncate">Logout</span>
             </Button>
           </div>
         </div>

@@ -230,36 +230,40 @@ export function UploadForm() {
             </motion.div>
           </div>
         </>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card>
-            <CardContent className="flex items-center justify-between py-4">
-              <div className="flex items-center justify-between gap-3">
-                <FileText className="h-8 w-8 text-primary" />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="overflow-hidden">
+              <CardContent className="flex items-center gap-3 py-4 min-w-0">
+                {/* Icon - never shrinks */}
+                <FileText className="h-8 w-8 text-primary shrink-0" />
+
+                {/* File info - shrinks and truncates */}
                 <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm truncate break-words">
-                      {file.name}
-                    </p>
-                      <p className="text-xs text-muted-foreground">
+                  <p className="font-medium text-sm truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     {formatFileSize(file.size)}
                   </p>
                 </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleRemoveFile}
-                disabled={isProcessing}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+
+                {/* Remove button - never shrinks */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={handleRemoveFile}
+                  disabled={isProcessing}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
       {error && (
         <motion.div

@@ -14,14 +14,18 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden md:flex">
+    <div className="min-h-screen flex overflow-hidden max-w-[100vw]">
+      {/* Sidebar - shrink-0 prevents it from being squished */}
+      <div className="hidden md:flex shrink-0">
         <Sidebar />
       </div>
 
-      <div className="flex-1 flex flex-col">
+      {/* Main content wrapper - min-w-0 is CRITICAL */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 p-4 md:p-6">
+        
+        {/* Scrollable content area */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden min-w-0">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>

@@ -71,7 +71,7 @@ export default function DocumentViewPage() {
   const params = useParams();
   const router = useRouter();
 
-    useEffect(() => {
+  useEffect(() => {
     if (document) {
       window.document.title = `${document.originalName} | DocDigitize`;
     }
@@ -123,54 +123,56 @@ export default function DocumentViewPage() {
       downloadAsDocx();
     }
   };
-        const cleanMarkdown = (text) => {
-      if (!text) return "";
 
-      return text
-        .replace(/#{1,6}\s?/g, "")        // Remove headings #
-        .replace(/\*\*(.*?)\*\*/g, "$1")  // Remove bold **
-        .replace(/\*(.*?)\*/g, "$1")      // Remove italic *
-        .replace(/-\s/g, "• ")            // Replace dash bullets with dot
-        .replace(/`(.*?)`/g, "$1")        // Remove inline code `
-        .trim();
-    };
-      const downloadAsTxt = () => {
-        const cleanSummary = cleanMarkdown(document.summary);
+  const cleanMarkdown = (text) => {
+    if (!text) return "";
 
-        const blob = new Blob([cleanSummary], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = window.document.createElement("a");
-        a.href = url;
-        a.download = `${document.originalName}_${selectedType}_summary.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
+    return text
+      .replace(/#{1,6}\s?/g, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/-\s/g, "• ")
+      .replace(/`(.*?)`/g, "$1")
+      .trim();
+  };
 
-        toast.success("Downloading AI summary as TXT!");
-      };
+  const downloadAsTxt = () => {
+    const cleanSummary = cleanMarkdown(document.summary);
 
-      const downloadAsDocx = async () => {
-        try {
-          const { Document: DocxDocument, Packer, Paragraph } = await import("docx");
-          const { saveAs } = await import("file-saver");
+    const blob = new Blob([cleanSummary], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement("a");
+    a.href = url;
+    a.download = `${document.originalName}_${selectedType}_summary.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
 
-          const cleanSummary = cleanMarkdown(document.summary);
+    toast.success("Downloading AI summary as TXT!");
+  };
 
-          const paragraphs = cleanSummary.split("\n").map(
-            (line) => new Paragraph(line)
-          );
+  const downloadAsDocx = async () => {
+    try {
+      const { Document: DocxDocument, Packer, Paragraph } = await import("docx");
+      const { saveAs } = await import("file-saver");
 
-          const doc = new DocxDocument({
-            sections: [{ children: paragraphs }],
-          });
+      const cleanSummary = cleanMarkdown(document.summary);
 
-          const blob = await Packer.toBlob(doc);
-          saveAs(blob, `${document.originalName}_${selectedType}_summary.docx`);
+      const paragraphs = cleanSummary.split("\n").map(
+        (line) => new Paragraph(line)
+      );
 
-          toast.success("AI summary downloaded as DOCX!");
-        } catch (error) {
-          toast.error("Failed to download summary.");
-        }
-      };
+      const doc = new DocxDocument({
+        sections: [{ children: paragraphs }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${document.originalName}_${selectedType}_summary.docx`);
+
+      toast.success("AI summary downloaded as DOCX!");
+    } catch (error) {
+      toast.error("Failed to download summary.");
+    }
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -286,12 +288,14 @@ export default function DocumentViewPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-48" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-96" />
-          <Skeleton className="h-96" />
+      <div className="w-full min-w-0 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Skeleton className="h-8 w-64 max-w-full" />
+          <Skeleton className="h-4 w-48 max-w-full" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-96" />
+            <Skeleton className="h-96" />
+          </div>
         </div>
       </div>
     );
@@ -299,9 +303,11 @@ export default function DocumentViewPage() {
 
   if (error || !document) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
+      <div className="flex flex-col items-center justify-center py-12 px-4">
         <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-lg font-medium">{error || "Document not found"}</p>
+        <p className="text-lg font-medium text-center break-words">
+          {error || "Document not found"}
+        </p>
         <Link href="/documents" className="mt-4">
           <Button variant="outline">Back to Documents</Button>
         </Link>
@@ -310,254 +316,329 @@ export default function DocumentViewPage() {
   }
 
   return (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="w-full px-4 sm:px-6 lg:px-8 overflow-x-hidden"
-  >
-    <div className="max-w-6xl mx-auto space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="w-full min-w-0 px-4 sm:px-6 lg:px-8 overflow-x-hidden"
+    >
+      <div className="max-w-6xl mx-auto space-y-6 min-w-0">
 
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <Link href="/documents">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+        {/* Header */}
+        <div className="flex items-start gap-3 min-w-0">
+          <Link href="/documents" className="shrink-0">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
 
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold break-words">
-            {document.originalName}
-          </h2>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold break-words">
+              {document.originalName}
+            </h2>
 
-          <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
-            <span>{formatDate(document.createdAt)}</span>
+            <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
+              <span className="shrink-0">{formatDate(document.createdAt)}</span>
 
-            <Badge variant="secondary">
-              {document.fileType.split("/").pop().toUpperCase()}
-            </Badge>
+              <Badge variant="secondary" className="shrink-0">
+                {document.fileType.split("/").pop().toUpperCase()}
+              </Badge>
 
-            <span>{formatFileSize(document.fileSize)}</span>
+              <span className="shrink-0">{formatFileSize(document.fileSize)}</span>
 
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatProcessingTime(document.processingTime)}
+              <div className="flex items-center gap-1 shrink-0">
+                <Clock className="h-3 w-3" />
+                {formatProcessingTime(document.processingTime)}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-2">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Eye className="h-4 w-4 mr-2" />
-              View Original
-            </Button>
-          </DialogTrigger>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">View Original</span>
+                <span className="sm:hidden">View</span>
+              </Button>
+            </DialogTrigger>
 
-          <DialogContent className="max-w-4xl max-h-[85vh]">
-            <DialogHeader>
-              <DialogTitle className="break-words">
-                {document.originalName}
-              </DialogTitle>
-            </DialogHeader>
+            <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[85vh]">
+              <DialogHeader>
+                <DialogTitle className="break-words truncate pr-8">
+                  {document.originalName}
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="overflow-auto">
-              {document.fileType.startsWith("image/") ? (
-                <SafeImage
-                  src={document.imageUrl}
-                  alt={document.originalName}
-                  className="max-w-full max-h-[70vh] object-contain mx-auto rounded"
-                />
-              ) : document.fileType === "application/pdf" ? (
-                <iframe
-                  src={document.imageUrl}
-                  className="w-full h-[70vh] rounded"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-[300px] bg-muted rounded">
-                  <p className="text-muted-foreground">
-                    Preview not available for this file type.
-                  </p>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+              <div className="overflow-auto min-w-0">
+                {document.fileType.startsWith("image/") ? (
+                  <SafeImage
+                    src={document.imageUrl}
+                    alt={document.originalName}
+                    className="max-w-full max-h-[70vh] object-contain mx-auto rounded"
+                  />
+                ) : document.fileType === "application/pdf" ? (
+                  <iframe
+                    src={document.imageUrl}
+                    className="w-full h-[70vh] rounded"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] bg-muted rounded">
+                    <p className="text-muted-foreground text-center px-4">
+                      Preview not available for this file type.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
-        {/* Download */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          </DropdownMenuTrigger>
+          {/* Download */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => handleDownload("txt")}>
-              Download as .TXT
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDownload("docx")}>
-              Download as .DOCX
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload("txt")}>
+                Download as .TXT
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload("docx")}>
+                Download as .DOCX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* Delete */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
-
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Document</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this document?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>
+          {/* Delete */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
                 Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
 
-      </div>
+            <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this document?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
 
-      {/* Text + Summary Grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-        {/* Extracted Text */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Extracted Text</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => handleCopy(document.extractedText, "text")}>
-              <Copy className="h-4 w-4 mr-1" />
-              Copy
-            </Button>
+        </div>
+
+        {/* Text + Summary Grid */}
+        <div className="grid gap-4 lg:grid-cols-2 min-w-0">
+
+          {/* Extracted Text */}
+          <Card className="overflow-hidden min-w-0">
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <CardTitle className="truncate">Extracted Text</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={() => handleCopy(document.extractedText, "text")}
+              >
+                {copiedText ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-1" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </CardHeader>
+
+            <CardContent className="min-w-0">
+              <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+                <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">
+                  {document.extractedText}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Summary */}
+          <Card className="overflow-hidden min-w-0">
+            <CardHeader className="space-y-4">
+
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <CardTitle className="truncate min-w-0">
+                  AI Summary ({SUMMARY_TYPES[selectedType]?.label})
+                </CardTitle>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => handleCopy(document.summary || "", "summary")}
+                >
+                  {copiedSummary ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
+                  <Button
+                    key={key}
+                    variant={selectedType === key ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => handleResummarize(key)}
+                    disabled={isResummarizing}
+                  >
+                    {value.label}
+                  </Button>
+                ))}
+              </div>
+
+            </CardHeader>
+
+            <CardContent className="min-w-0">
+              <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
+                {isResummarizing ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="overflow-hidden break-words">
+                    <MarkdownRenderer content={document.summary} />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Chat Section */}
+        <Card className="overflow-hidden min-w-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 shrink-0" />
+              <span className="truncate">Ask About This Document</span>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Ask questions and get answers based only on this document.
+            </p>
           </CardHeader>
 
-          <CardContent>
-            <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
-              <p className="text-sm whitespace-pre-wrap break-words">
-                {document.extractedText}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <CardContent className="min-w-0">
+            <div className="h-48 sm:h-64 overflow-y-auto bg-muted/50 rounded-md p-4 mb-4 space-y-4">
 
-        {/* Summary */}
-        <Card>
-         <CardHeader className="space-y-4">
-
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle>
-              AI Summary ({SUMMARY_TYPES[selectedType]?.label})
-            </CardTitle>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCopy(document.summary || "", "summary")}
-            >
-              {copiedSummary ? (
-                <>
-                  <Check className="h-4 w-4 mr-1" />
-                  Copied
-                </>
+              {chatMessages.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col items-center justify-center h-full text-center px-2"
+                >
+                  <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Ask a question about your document
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Example: &quot;What are the key concepts discussed?&quot;
+                  </p>
+                </motion.div>
               ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copy
-                </>
+                chatMessages.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`flex ${
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] px-4 py-2 rounded-lg text-sm break-words overflow-hidden ${
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      {msg.role === "assistant" ? (
+                        <MarkdownRenderer content={msg.content} />
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
+                  </motion.div>
+                ))
               )}
-            </Button>
-          </div>
 
-          <div className="flex flex-wrap gap-1">
-            {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
-              <Button
-                key={key}
-                variant={selectedType === key ? "default" : "outline"}
-                size="sm"
-                className="text-xs"
-                onClick={() => handleResummarize(key)}
-              >
-                {value.label}
-              </Button>
-            ))}
-          </div>
+              {isChatLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-muted rounded-lg px-4 py-2 text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                </motion.div>
+              )}
 
-        </CardHeader>
-
-          <CardContent>
-            <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">
-              <MarkdownRenderer content={document.summary} />
+              <div ref={chatEndRef} />
             </div>
+
+            <form onSubmit={handleChat} className="flex gap-2 min-w-0">
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask a question..."
+                disabled={isChatLoading}
+                className="min-w-0 flex-1"
+              />
+              <Button
+                type="submit"
+                className="shrink-0"
+                disabled={isChatLoading || !chatInput.trim()}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
           </CardContent>
         </Card>
+
+        {/* Flashcards */}
+        {document.extractedText && (
+          <FlashcardViewer documentId={params.id} />
+        )}
 
       </div>
-
-      {/* Chat Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            Ask About This Document
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <div className="h-48 sm:h-64 overflow-y-auto bg-muted/50 rounded-md p-4 mb-4">
-            {chatMessages.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-3 ${
-                  msg.role === "user" ? "text-right" : "text-left"
-                }`}
-              >
-                <div className="inline-block max-w-[85%] px-4 py-2 rounded-lg bg-muted text-sm break-words">
-                  {msg.role === "assistant" ? (
-                    <MarkdownRenderer content={msg.content} />
-                  ) : (
-                    msg.content
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <form onSubmit={handleChat} className="flex gap-2">
-            <Input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask a question..."
-            />
-            <Button type="submit">
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Flashcards */}
-      {document.extractedText && (
-        <FlashcardViewer documentId={params.id} />
-      )}
-
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
 }
