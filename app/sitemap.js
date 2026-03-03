@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://docdigitize.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://docdigitize.vercel.app";
 
   return [
     {
@@ -12,13 +12,13 @@ export default function sitemap() {
       url: `${baseUrl}/login`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/register`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.8,
     },
   ];
 }

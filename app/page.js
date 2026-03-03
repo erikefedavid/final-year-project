@@ -44,25 +44,32 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-2">
             <motion.h1
-              className="text-xl font-bold"
+              className="text-lg sm:text-xl font-bold shrink-0"
               whileHover={{ scale: 1.05 }}
             >
               DocDigitize
             </motion.h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3 min-w-0">
               <ThemeToggle />
               <Link href="/login">
-                <Button variant="ghost">Login</Button>
+                <Button variant="ghost" size="sm" className="px-2 sm:px-4">
+                  <span className="hidden sm:inline">Login</span>
+                  <span className="sm:hidden">Log in</span>
+                </Button>
               </Link>
               <Link href="/register">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button>Get Started</Button>
+                  <Button size="sm" className="px-2 sm:px-4">
+                    <span className="hidden sm:inline">Get Started</span>
+                    <span className="sm:hidden">Start</span>
+                  </Button>
                 </motion.div>
               </Link>
             </div>
+            
           </div>
         </div>
       </motion.nav>
