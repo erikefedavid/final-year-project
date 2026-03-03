@@ -9,6 +9,9 @@ export const metadata = {
     default: "DocDigitize — AI Document Scanner & Summarizer",
     template: "%s | DocDigitize",
   },
+    verification: {
+    google: "mo12ZXN25W0WIP6B-JSDNCWmL8piRWz0ySnhRLQ8jUk",
+  },
   description:
     "Turn physical documents into digital text with OCR and get AI-powered summaries. Built for students. Upload, extract, summarize in seconds.",
   keywords: [
