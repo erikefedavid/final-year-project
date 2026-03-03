@@ -45,9 +45,9 @@ export default function LandingPage() {
         className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center h-16">
             <motion.h1
-              className="text-xl font-bold w-full"
+              className="text-xl font-bold"
               whileHover={{ scale: 1.05 }}
             >
               DocDigitize
