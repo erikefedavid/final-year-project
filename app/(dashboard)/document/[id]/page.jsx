@@ -123,77 +123,54 @@ export default function DocumentViewPage() {
       downloadAsDocx();
     }
   };
+        const cleanMarkdown = (text) => {
+      if (!text) return "";
 
-  const downloadAsTxt = () => {
-    const content = `Document: ${document.originalName}\nDate: ${new Date(document.createdAt).toLocaleDateString()}\nSummary Type: ${SUMMARY_TYPES[document.summaryType]?.label || "Detailed"}\n\n--- EXTRACTED TEXT ---\n\n${document.extractedText}\n\n--- AI SUMMARY ---\n\n${document.summary}`;
+      return text
+        .replace(/#{1,6}\s?/g, "")        // Remove headings #
+        .replace(/\*\*(.*?)\*\*/g, "$1")  // Remove bold **
+        .replace(/\*(.*?)\*/g, "$1")      // Remove italic *
+        .replace(/-\s/g, "• ")            // Replace dash bullets with dot
+        .replace(/`(.*?)`/g, "$1")        // Remove inline code `
+        .trim();
+    };
+      const downloadAsTxt = () => {
+        const cleanSummary = cleanMarkdown(document.summary);
 
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = window.document.createElement("a");
-    a.href = url;
-    a.download = `${document.originalName}_summary.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Downloading as TXT!");
-  };
+        const blob = new Blob([cleanSummary], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = window.document.createElement("a");
+        a.href = url;
+        a.download = `${document.originalName}_${selectedType}_summary.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
 
-  const downloadAsDocx = async () => {
-    try {
-      const { Document: DocxDocument, Packer, Paragraph, TextRun, HeadingLevel } = await import("docx");
-      const { saveAs } = await import("file-saver");
+        toast.success("Downloading AI summary as TXT!");
+      };
 
-      const doc = new DocxDocument({
-        sections: [
-          {
-            children: [
-              new Paragraph({
-                text: document.originalName,
-                heading: HeadingLevel.HEADING_1,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `Date: ${new Date(document.createdAt).toLocaleDateString()}`,
-                    color: "888888",
-                  }),
-                ],
-              }),
-              new Paragraph({ text: "" }),
-              new Paragraph({
-                text: "Extracted Text",
-                heading: HeadingLevel.HEADING_2,
-              }),
-              ...document.extractedText.split("\n").map(
-                (line) =>
-                  new Paragraph({
-                    children: [new TextRun({ text: line })],
-                  })
-              ),
-              new Paragraph({ text: "" }),
-              new Paragraph({
-                text: "AI Summary",
-                heading: HeadingLevel.HEADING_2,
-              }),
-              ...document.summary.split("\n").map(
-                (line) =>
-                  new Paragraph({
-                    children: [new TextRun({ text: line })],
-                  })
-              ),
-            ],
-          },
-        ],
-      });
+      const downloadAsDocx = async () => {
+        try {
+          const { Document: DocxDocument, Packer, Paragraph } = await import("docx");
+          const { saveAs } = await import("file-saver");
 
-      const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${document.originalName}_summary.docx`);
-      toast.success("Downloading as DOCX!");
-    } catch (error) {
-      console.error("DOCX download failed:", error);
-      toast.error("Failed to download as DOCX. Downloading as TXT instead.");
-      downloadAsTxt();
-    }
-  };
+          const cleanSummary = cleanMarkdown(document.summary);
+
+          const paragraphs = cleanSummary.split("\n").map(
+            (line) => new Paragraph(line)
+          );
+
+          const doc = new DocxDocument({
+            sections: [{ children: paragraphs }],
+          });
+
+          const blob = await Packer.toBlob(doc);
+          saveAs(blob, `${document.originalName}_${selectedType}_summary.docx`);
+
+          toast.success("AI summary downloaded as DOCX!");
+        } catch (error) {
+          toast.error("Failed to download summary.");
+        }
+      };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -482,23 +459,47 @@ export default function DocumentViewPage() {
 
         {/* Summary */}
         <Card>
-          <CardHeader>
-            <CardTitle>AI Summary</CardTitle>
+         <CardHeader className="space-y-4">
 
-            <div className="flex flex-wrap gap-1 pt-2">
-              {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
-                <Button
-                  key={key}
-                  variant={selectedType === key ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => handleResummarize(key)}
-                >
-                  {value.label}
-                </Button>
-              ))}
-            </div>
-          </CardHeader>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle>
+              AI Summary ({SUMMARY_TYPES[selectedType]?.label})
+            </CardTitle>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCopy(document.summary || "", "summary")}
+            >
+              {copiedSummary ? (
+                <>
+                  <Check className="h-4 w-4 mr-1" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-1" />
+                  Copy
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-1">
+            {Object.entries(SUMMARY_TYPES).map(([key, value]) => (
+              <Button
+                key={key}
+                variant={selectedType === key ? "default" : "outline"}
+                size="sm"
+                className="text-xs"
+                onClick={() => handleResummarize(key)}
+              >
+                {value.label}
+              </Button>
+            ))}
+          </div>
+
+        </CardHeader>
 
           <CardContent>
             <div className="h-64 sm:h-80 lg:h-96 overflow-y-auto rounded-md bg-muted/50 p-4">

@@ -100,10 +100,30 @@ export async function POST(request) {
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${cleanName}`;
 
-    const [cloudinaryResult, ocrResult] = await Promise.all([
-      uploadToCloudinary(buffer, fileName),
-      processDocument(buffer, file.type),
-    ]);
+    let cloudinaryResult = null;
+    let ocrResult = null;
+
+    try {
+      const uploadPromise = uploadToCloudinary(buffer, fileName);
+      const processPromise = processDocument(buffer, file.type);
+
+      [cloudinaryResult, ocrResult] = await Promise.all([
+        uploadPromise,
+        processPromise,
+      ]);
+    } catch (error) {
+      console.error("Processing failed:", error);
+
+      // ✅ If file was uploaded but processing failed, clean up
+      if (cloudinaryResult?.public_id) {
+        await deleteFromCloudinary(cloudinaryResult.public_id);
+      }
+
+      return NextResponse.json(
+        { success: false, error: "Failed to process document." },
+        { status: 500 }
+      );
+    }
 
     let summary = "";
 
