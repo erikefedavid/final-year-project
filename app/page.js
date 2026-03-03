@@ -47,7 +47,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <motion.h1
-              className="text-xl font-bold"
+              className="text-xl font-bold w-full"
               whileHover={{ scale: 1.05 }}
             >
               DocDigitize
