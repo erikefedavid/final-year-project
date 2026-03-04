@@ -187,7 +187,7 @@ export function UploadForm() {
           </Card>
 
           <div className="md:hidden space-y-3">
-            <motion.div
+            {/* <motion.div
               whileTap={{ scale: 0.98 }}
             >
               <Card
@@ -206,7 +206,7 @@ export function UploadForm() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </motion.div> */}
 
             <motion.div
               whileTap={{ scale: 0.98 }}
