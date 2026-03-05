@@ -165,8 +165,14 @@ export default function DocumentViewPage() {
         sections: [{ children: paragraphs }],
       });
 
+      const baseName = document.originalName.replace(/\.[^/.]+$/, "");
+
+      const safeName = baseName.replace(/[^a-zA-Z0-9-_ ]/g, "").trim();
+    
+      const finalName = `${safeName}_${selectedType}_summary.docx`;
+
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${document.originalName}_${selectedType}_summary.docx`);
+      saveAs(blob, finalName);
 
       toast.success("AI summary downloaded as DOCX!");
     } catch (error) {
