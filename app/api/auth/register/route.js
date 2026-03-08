@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { createToken } from "@/lib/auth";
 import { sanitizeInput } from "@/lib/sanitize";
 import { NextResponse } from "next/server";
+import { validateEmail } from "@/lib/validation";
 
 export async function POST(request) {
   try {
@@ -11,6 +12,13 @@ export async function POST(request) {
 
     const body = await request.json();
 
+    const emailError = validateEmail(body.email);
+    if (emailError) {
+      return NextResponse.json(
+        { success: false, error: emailError },
+        { status: 400 }
+      );
+    }
     const name = sanitizeInput(body.name);
     const email = sanitizeInput(body.email);
     const password = body.password; // DO NOT sanitize password

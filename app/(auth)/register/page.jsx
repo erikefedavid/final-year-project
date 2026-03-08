@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { validateEmail } from "@/lib/validation";
 import {
   Card,
   CardContent,
@@ -27,6 +28,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const emailValidationMsg = validateEmail(email);
+    if (emailValidationMsg) {
+      setError(emailValidationMsg);
+      return; 
+    }
     setIsLoading(true);
 
     const data = await register(name, email, password);
