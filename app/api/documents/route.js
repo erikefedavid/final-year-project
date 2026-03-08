@@ -145,7 +145,7 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ success: false, error: "Failed to process document" }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || "Failed to process document" }, { status: 500 });
   }
 }
 
