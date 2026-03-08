@@ -37,9 +37,7 @@ export function UploadForm() {
 
   const handleFileSelect = (selectedFile) => {
     setError("");
-
     if (!selectedFile) return;
-
     if (validateFile(selectedFile)) {
       setFile(selectedFile);
     }
@@ -67,7 +65,6 @@ export function UploadForm() {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-
     const droppedFile = e.dataTransfer.files[0];
     handleFileSelect(droppedFile);
   };
@@ -80,12 +77,8 @@ export function UploadForm() {
   const handleRemoveFile = () => {
     setFile(null);
     setError("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    if (cameraInputRef.current) {
-      cameraInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const formatFileSize = (bytes) => {
@@ -103,31 +96,51 @@ export function UploadForm() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      
-      const response = await fetchWithTimeout("/api/documents", {
-        method: "POST",
-        body: formData,
-      }, 60000);
+
+      const response = await fetchWithTimeout(
+        "/api/documents",
+        { method: "POST", body: formData },
+        60000
+      );
 
       const data = await response.json();
 
-        if (data.success) {
-          toast.success("✅ Document processed successfully!");
-          const docId = data.data.document._id;
-          setTimeout(() => {
-            router.push(`/document/${docId}`);
-          }, 500);
+      if (data.success) {
+        toast.success("Document processed successfully!");
+        const docId = data.data.document._id;
+        setTimeout(() => {
+          router.push(`/document/${docId}`);
+        }, 500);
+      } else {
+        const errorMessage = data.error || "Failed to process document.";
+
+        if (errorMessage.includes("already been uploaded")) {
+          toast.error("This document has already been uploaded.");
+        } else if (errorMessage.includes("scanned PDF")) {
+          toast.error("Scanned PDFs are not supported. Please upload a digital PDF.");
+        } else if (
+          errorMessage.includes("password protected") ||
+          errorMessage.includes("corrupted")
+        ) {
+          toast.error("Could not open PDF. It may be password protected or corrupted.");
+        } else if (errorMessage.includes("Too many uploads")) {
+          toast.error("Too many uploads. Please wait a minute before trying again.");
+        } else if (errorMessage.includes("File too large")) {
+          toast.error("File too large. Maximum size is 10MB.");
         } else {
-          if (data.error === "This document has already been uploaded.") {
-            toast.error("📄 This document already exists.");
-          } else {
-            toast.error(data.error || "Failed to process document.");
-          }
-          setError(data.error || "Failed to process document.");
+          toast.error(errorMessage);
         }
+
+        setError(errorMessage);
+      }
     } catch (err) {
-      toast.error("Something went wrong. Please try again.");
-      setError("Something went wrong. Please try again.");
+      if (err.name === "AbortError" || err.message?.includes("timeout")) {
+        toast.error("Request timed out. Your file may be too large or complex.");
+        setError("Request timed out. Please try a smaller file.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -151,6 +164,24 @@ export function UploadForm() {
         capture="environment"
         onChange={handleInputChange}
       />
+
+      {/* Supported formats notice */}
+      <Card className="border border-yellow-500/30 bg-yellow-500/5">
+        <CardContent className="py-3 px-4">
+          <div className="flex gap-2">
+            <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-yellow-500">Before you upload</p>
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                <li>• Supported: Digital PDFs, Word docs (.docx), JPEG, PNG</li>
+                <li>• Scanned PDFs are not supported</li>
+                <li>• Password protected PDFs will fail</li>
+                <li>• Maximum file size is 10MB</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {!file ? (
         <>
@@ -187,9 +218,7 @@ export function UploadForm() {
           </Card>
 
           <div className="md:hidden space-y-3">
-            <motion.div
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileTap={{ scale: 0.98 }}>
               <Card
                 className="border-2 border-dashed cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => cameraInputRef.current?.click()}
@@ -208,9 +237,7 @@ export function UploadForm() {
               </Card>
             </motion.div>
 
-            <motion.div
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileTap={{ scale: 0.98 }}>
               <Card
                 className="border-2 border-dashed cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
@@ -230,40 +257,33 @@ export function UploadForm() {
             </motion.div>
           </div>
         </>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-3 py-4 min-w-0">
-                {/* Icon - never shrinks */}
-                <FileText className="h-8 w-8 text-primary shrink-0" />
-
-                {/* File info - shrinks and truncates */}
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(file.size)}
-                  </p>
-                </div>
-
-                {/* Remove button - never shrinks */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={handleRemoveFile}
-                  disabled={isProcessing}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="overflow-hidden">
+            <CardContent className="flex items-center gap-3 py-4 min-w-0">
+              <FileText className="h-8 w-8 text-primary shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm truncate">{file.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatFileSize(file.size)}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={handleRemoveFile}
+                disabled={isProcessing}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {error && (
         <motion.div
@@ -296,4 +316,4 @@ export function UploadForm() {
       </Button>
     </div>
   );
-}
+         }
