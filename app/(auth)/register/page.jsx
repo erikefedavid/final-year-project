@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { validateEmail } from "@/lib/validation";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -26,23 +27,41 @@ export default function RegisterPage() {
   const { register } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    const emailValidationMsg = validateEmail(email);
-    if (emailValidationMsg) {
-      setError(emailValidationMsg);
-      return; 
-    }
-    setIsLoading(true);
+  e.preventDefault();
 
-    const data = await register(name, email, password);
+  // ✅ Name validation
+  if (!name || name.trim().length < 3) {
+    toast.error("Name must be at least 3 characters.");
+    return;
+  }
 
-    if (!data.success) {
-      setError(data.error);
-    }
+  // ✅ Email validation (strong format)
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-    setIsLoading(false);
-  };
+  if (!emailRegex.test(email)) {
+    toast.error("Please enter a valid email address.");
+    return;
+  }
+
+  if (email.length < 8) {
+    toast.error("Email is too short.");
+    return;
+  }
+
+  // ✅ Password validation
+  if (!password || password.length < 6) {
+    toast.error("Password must be at least 6 characters.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  const data = await register(name, email, password);
+
+  setIsLoading(false);
+
+  // Backend errors already show toast from auth-context
+};
 
   return (
     <motion.div
