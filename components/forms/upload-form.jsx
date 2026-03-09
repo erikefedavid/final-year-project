@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, FileText, AlertCircle, Loader2, Camera, FolderOpen } from "lucide-react";
-import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
+import { Upload, X, FileText, AlertCircle, Loader2, FolderOpen } from "lucide-react";
+import { MAX_FILE_SIZE, MAX_IMAGE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-wrapper";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ export function UploadForm() {
   const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const router = useRouter();
 
   const validateFile = (selectedFile) => {
@@ -27,8 +26,19 @@ export function UploadForm() {
       return false;
     }
 
+    const isImage =
+      selectedFile.type === "image/jpeg" ||
+      selectedFile.type === "image/png";
+
+    if (isImage && selectedFile.size > MAX_IMAGE_SIZE) {
+      setError("Image too large. Maximum size for JPG and PNG is 1MB.");
+      toast.error("Image too large. Maximum size for JPG and PNG is 1MB.");
+      return false;
+    }
+
     if (selectedFile.size > MAX_FILE_SIZE) {
       setError("File too large. Maximum size is 10MB.");
+      toast.error("File too large. Maximum size is 10MB.");
       return false;
     }
 
@@ -78,7 +88,6 @@ export function UploadForm() {
     setFile(null);
     setError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
-    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const formatFileSize = (bytes) => {
@@ -156,15 +165,6 @@ export function UploadForm() {
         onChange={handleInputChange}
       />
 
-      <input
-        type="file"
-        ref={cameraInputRef}
-        className="hidden"
-        accept="image/*"
-        capture="environment"
-        onChange={handleInputChange}
-      />
-
       {/* Supported formats notice */}
       <Card className="border border-yellow-500/30 bg-yellow-500/5">
         <CardContent className="py-3 px-4">
@@ -174,6 +174,7 @@ export function UploadForm() {
               <p className="text-xs font-medium text-yellow-500">Before you upload</p>
               <ul className="text-xs text-muted-foreground space-y-0.5">
                 <li>• Supported: Digital PDFs, Word docs (.docx), JPEG, PNG</li>
+                <li>• JPG and PNG must be under 1MB</li>
                 <li>• Scanned PDFs are not supported</li>
                 <li>• Password protected PDFs will fail</li>
                 <li>• Maximum file size is 10MB</li>
@@ -185,6 +186,7 @@ export function UploadForm() {
 
       {!file ? (
         <>
+          {/* Desktop drag and drop */}
           <Card
             className={cn(
               "border-2 border-dashed cursor-pointer transition-all duration-200 hidden md:block",
@@ -212,31 +214,13 @@ export function UploadForm() {
                 or click to browse
               </p>
               <p className="text-xs text-muted-foreground">
-                JPG, PNG, PDF, DOCX — Max 10MB
+                JPG, PNG (max 1MB) · PDF, DOCX (max 10MB)
               </p>
             </CardContent>
           </Card>
 
-          <div className="md:hidden space-y-3">
-            <motion.div whileTap={{ scale: 0.98 }}>
-              <Card
-                className="border-2 border-dashed cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => cameraInputRef.current?.click()}
-              >
-                <CardContent className="flex items-center gap-4 py-6">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                    <Camera className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Take a Photo</p>
-                    <p className="text-sm text-muted-foreground">
-                      Use your camera to scan a document
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
+          {/* Mobile browse only */}
+          <div className="md:hidden">
             <motion.div whileTap={{ scale: 0.98 }}>
               <Card
                 className="border-2 border-dashed cursor-pointer hover:border-primary/50 transition-colors"
@@ -249,7 +233,7 @@ export function UploadForm() {
                   <div>
                     <p className="font-medium">Browse Files</p>
                     <p className="text-sm text-muted-foreground">
-                      Select from your device — JPG, PNG, PDF, DOCX
+                      JPG, PNG (max 1MB) · PDF, DOCX (max 10MB)
                     </p>
                   </div>
                 </CardContent>
@@ -316,4 +300,4 @@ export function UploadForm() {
       </Button>
     </div>
   );
-         }
+}     
