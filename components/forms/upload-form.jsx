@@ -5,8 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, FileText, AlertCircle, Loader2, FolderOpen } from "lucide-react";
-import { MAX_FILE_SIZE, MAX_IMAGE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
+import {
+  Upload,
+  X,
+  FileText,
+  AlertCircle,
+  Loader2,
+  FolderOpen,
+} from "lucide-react";
+import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 import { fetchWithTimeout } from "@/lib/fetch-wrapper";
 import { cn } from "@/lib/utils";
@@ -23,16 +30,6 @@ export function UploadForm() {
   const validateFile = (selectedFile) => {
     if (!ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
       setError("Invalid file type. Please upload JPG, PNG, PDF, or DOCX.");
-      return false;
-    }
-
-    const isImage =
-      selectedFile.type === "image/jpeg" ||
-      selectedFile.type === "image/png";
-
-    if (isImage && selectedFile.size > MAX_IMAGE_SIZE) {
-      setError("Image too large. Maximum size for JPG and PNG is 1MB.");
-      toast.error("Image too large. Maximum size for JPG and PNG is 1MB.");
       return false;
     }
 
@@ -125,16 +122,25 @@ export function UploadForm() {
 
         if (errorMessage.includes("already been uploaded")) {
           toast.error("This document has already been uploaded.");
-        } else if (errorMessage.includes("scanned PDF")) {
-          toast.error("Scanned PDFs are not supported. Please upload a digital PDF.");
         } else if (
-          errorMessage.includes("password protected") ||
+          errorMessage.includes("scanned") ||
+          errorMessage.includes("image-based")
+        ) {
+          toast.error(
+            "This PDF appears to be scanned. Please upload a digitally-created PDF."
+          );
+        } else if (
+          errorMessage.includes("password") ||
           errorMessage.includes("corrupted")
         ) {
-          toast.error("Could not open PDF. It may be password protected or corrupted.");
+          toast.error(
+            "Could not open PDF. It may be password protected or corrupted."
+          );
         } else if (errorMessage.includes("Too many uploads")) {
-          toast.error("Too many uploads. Please wait a minute before trying again.");
-        } else if (errorMessage.includes("File too large")) {
+          toast.error(
+            "Too many uploads. Please wait a minute before trying again."
+          );
+        } else if (errorMessage.includes("too large")) {
           toast.error("File too large. Maximum size is 10MB.");
         } else {
           toast.error(errorMessage);
@@ -144,7 +150,9 @@ export function UploadForm() {
       }
     } catch (err) {
       if (err.name === "AbortError" || err.message?.includes("timeout")) {
-        toast.error("Request timed out. Your file may be too large or complex.");
+        toast.error(
+          "Request timed out. Your file may be too large or complex."
+        );
         setError("Request timed out. Please try a smaller file.");
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -171,10 +179,13 @@ export function UploadForm() {
           <div className="flex gap-2">
             <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-xs font-medium text-yellow-500">Before you upload</p>
+              <p className="text-xs font-medium text-yellow-500">
+                Before you upload
+              </p>
               <ul className="text-xs text-muted-foreground space-y-0.5">
                 <li>• Supported: Digital PDFs, Word docs (.docx), JPEG, PNG</li>
-                <li>• JPG and PNG must be under 1MB</li>
+                <li>• Screenshots and phone photos are supported</li>
+                <li>• Handwriting is not supported</li>
                 <li>• Scanned PDFs are not supported</li>
                 <li>• Password protected PDFs will fail</li>
                 <li>• Maximum file size is 10MB</li>
@@ -214,7 +225,7 @@ export function UploadForm() {
                 or click to browse
               </p>
               <p className="text-xs text-muted-foreground">
-                JPG, PNG (max 1MB) · PDF, DOCX (max 10MB)
+                JPG, PNG, PDF, DOCX — Max 10MB
               </p>
             </CardContent>
           </Card>
@@ -233,7 +244,7 @@ export function UploadForm() {
                   <div>
                     <p className="font-medium">Browse Files</p>
                     <p className="text-sm text-muted-foreground">
-                      JPG, PNG (max 1MB) · PDF, DOCX (max 10MB)
+                      JPG, PNG, PDF, DOCX — Max 10MB
                     </p>
                   </div>
                 </CardContent>
@@ -300,4 +311,4 @@ export function UploadForm() {
       </Button>
     </div>
   );
-}     
+         }
