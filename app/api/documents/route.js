@@ -101,14 +101,30 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Failed to process document." }, { status: 500 });
     }
 
-    let summary = "";
-    try {
-      summary = await summarizeText(ocrResult.text);
-    } catch (aiError) {
-      console.error("AI summarization failed:", aiError);
-      summary = "Summary generation failed. Please try again later.";
-    }
+    // Check if meaningful text was extracted
+if (
+  !ocrResult.text ||
+  ocrResult.text.trim().length === 0 ||
+  ocrResult.text.trim() === "No readable text found in image." ||
+  ocrResult.confidence === 0
+) {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "No text could be extracted from this document. Please upload a document with readable text.",
+    },
+    { status: 422 }
+  );
+}
 
+let summary = "";
+try {
+  summary = await summarizeText(ocrResult.text);
+} catch (aiError) {
+  console.error("AI summarization failed:", aiError);
+  summary = "Summary generation failed. Please try again later.";
+}
     const processingTime = Date.now() - startTime;
 
     // ✅ Save the document (Uses multi-summary format we discussed earlier)
