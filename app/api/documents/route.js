@@ -93,13 +93,16 @@ export async function POST(request) {
       const processPromise = processDocument(buffer, file.type);
 
       [cloudinaryResult, ocrResult] = await Promise.all([uploadPromise, processPromise]);
-    } catch (error) {
-      console.error("Processing failed:", error);
-      if (cloudinaryResult?.public_id) {
-        await deleteFromCloudinary(cloudinaryResult.public_id);
-      }
-      return NextResponse.json({ success: false, error: "Failed to process document." }, { status: 500 });
-    }
+} catch (error) {
+  console.error("Processing failed:", error);
+  if (cloudinaryResult?.public_id) {
+    await deleteFromCloudinary(cloudinaryResult.public_id);
+  }
+  return NextResponse.json(
+    { success: false, error: error.message || "Failed to process document." },
+    { status: 500 }
+  );
+}
 
     // Check if meaningful text was extracted
 if (
